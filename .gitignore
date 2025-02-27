@@ -1,0 +1,4 @@
+hdris/*.exr
+*.blend
+*.blend1
+/render.py
