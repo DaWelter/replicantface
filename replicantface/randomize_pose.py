@@ -130,9 +130,9 @@ def randomize_pose(hum : Human):
         print ("selected pose: ", new_pose)
 
     # Change head direction
-    heading = 70./180.*pi*random_beta_11(3.)
-    pitch = 45./180.*pi*random_beta_11(3.)
-    roll = 30./180.*pi*random_beta_11(3.)
+    heading = 70./180.*pi*random_beta_11(4.)
+    pitch = (random_beta_11(4.)*20.+3.) /180.*pi # Positive pitch = looking down
+    roll = 10./180.*pi*random_beta_11(4.)
     bones = rig.pose.bones
     headbone = bones['head']
     neckbone = bones['neck']
@@ -148,22 +148,21 @@ def randomize_pose(hum : Human):
 
 
 def randomize_camera(cam : bpy.types.Object, hum_object : bpy.types.Object, env_cam : bpy.types.Object):
-    # Camera parameters
+    assert cam.parent is not None
+
     update_child_of_constraint(cam.parent, hum_object, 'head')
 
     rig_heading = hum_object.rotation_euler[2]
 
-    if False: #random.randint(0,100) == 0:
-        heading = random.uniform(-pi,pi)
-    else:
-        heading = random_beta_11(3.)*100.*pi/180. # Relative to the face
-    pitch = random_beta_11(3.)*30.*pi/180. # Relative to the world
-    if 1:
-        cam.parent.rotation_euler[2] = rig_heading + heading
-        cam.parent.rotation_euler[1] = 0.
-        cam.parent.rotation_euler[0] = pi/2. + pitch
+    heading = random_beta_11(4.)*70.*pi/180.
+    pitch = (random_beta_11(4.)*5. - 2.)*pi/180. # positive values make the camera look up and thus cause positive pitch of the face.
+    cam.parent.rotation_euler[2] = rig_heading + heading
+    cam.parent.rotation_euler[1] = 0.
+    cam.parent.rotation_euler[0] = pi/2. + pitch # This is *not* added to the face pitch
+
     distance = cam.location[2]
     cam.data.dof.focus_distance = distance
+    
     # Env cam
     env_cam.data.lens = random.choice([25.,30.,50.,70.])
 
