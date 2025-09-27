@@ -1,0 +1,30 @@
+{
+    "blend_file": "LongCutFront.blend",
+    "hair_systems": {
+        "bob_long_03_strands": {
+            "length": 0.9800000190734863,
+            "children_amount": 50,
+            "path_steps": 5
+        },
+        "bob_long_02_base_low": {
+            "length": 1.0,
+            "children_amount": 100,
+            "path_steps": 4
+        },
+        "bob_long_05_strands_single": {
+            "length": 1.0,
+            "children_amount": 3,
+            "path_steps": 4
+        },
+        "bob_long_04_strands_thin": {
+            "length": 0.9700000286102295,
+            "children_amount": 8,
+            "path_steps": 5
+        },
+        "bob_long_01_base_top": {
+            "length": 1.0,
+            "children_amount": 100,
+            "path_steps": 4
+        }
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "blend_file": "Custom/Goat.blend",
+    "hair_systems": {
+        "fh_Mustache_High": {
+            "length": 1.0,
+            "children_amount": 10,
+            "path_steps": 4
+        },
+        "fh_Side_Lines": {
+            "length": 1.0,
+            "children_amount": 8,
+            "path_steps": 3
+        },
+        "fh_soul_patch": {
+            "length": 1.0,
+            "children_amount": 10,
+            "path_steps": 3
+        },
+        "fh_sideburns_low": {
+            "length": 0.10000000149011612,
+            "children_amount": 20,
+            "path_steps": 1
+        },
+        "fh_beard_medium": {
+            "length": 0.6532378196716309,
+            "children_amount": 45,
+            "path_steps": 3
+        }
+    }
+}

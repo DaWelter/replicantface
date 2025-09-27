@@ -1,0 +1,30 @@
+{
+    "blend_file": "LongCurly.blend",
+    "hair_systems": {
+        "03_strands": {
+            "length": 0.9800000190734863,
+            "children_amount": 27,
+            "path_steps": 5
+        },
+        "02_filler": {
+            "length": 0.6274509429931641,
+            "children_amount": 40,
+            "path_steps": 4
+        },
+        "06_single": {
+            "length": 1.0,
+            "children_amount": 3,
+            "path_steps": 5
+        },
+        "05_thin_strands": {
+            "length": 0.9700000286102295,
+            "children_amount": 8,
+            "path_steps": 5
+        },
+        "01_base": {
+            "length": 0.6274509429931641,
+            "children_amount": 40,
+            "path_steps": 4
+        }
+    }
+}

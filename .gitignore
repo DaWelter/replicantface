@@ -1,4 +1,9 @@
 hdris/*.exr
-*.blend
+/state
+*.c4d
+*.fbx
+/assets_editing
+/tmp
+*.pyc
+__pycache__
 *.blend1
-/render.py

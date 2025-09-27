@@ -1,55 +1,64 @@
-# Replicant Face
+# Replicantface
 
-This project is about generating synthetic faces with pose annotations.
-It's based on [Blender](https://www.blender.org/) and the [Human Generator](https://blendermarket.com/products/humgen3d) addon.
+This project is about rendering synthetic faces with pose annotations. It is intended for
+head pose estimation with machine learning, where labeling natural in-the-wild faces is notoriously difficult.
 
-Only the code for randomizing the scene and exporting the data is in this repo.
-Due to licensing reasons the assets can't be published. And therefore the scene
-file is also not included.
+A dataset is provided as well as scripts and (the free) assets used to create the dataset.
+The project is based on [Blender](https://www.blender.org/) for photorealistic rendering and
+[Human Generator](https://blendermarket.com/products/humgen3d) to provide the character models.
 
-## Setup
+Faces are randomized with a great variety of different poses, face shapes, expressions, skin textures, hairstyles,
+accessories, eye movements, backgrounds and lighting.
 
-TODO: scene screenshot, how to reproduce the scene and head data.
+To carry this out, a rather large volume of python code controls the character generation and other parameters.
+
+Exported annotations are segmentation mask, 6dof pose, and dense vertices.
+A script is provided to convert to the popular Matlab format from [3DDFA](http://www.cbsr.ia.ac.cn/users/xiangyuzhu/projects/3DDFA/main.htm) / AFLW2k-3D / 300W-LP.
+
+## Related work
+
+Replicantface is heavily inspired by [FaceSynthetics](https://github.com/microsoft/FaceSynthetics), motivated by its lack of pose
+annotations and missing z-coordinate for landmarks. Another dataset called "SynHead" from [Dynamic Facial Analysis](https://research.nvidia.com/publication/2017-07_dynamic-facial-analysis-bayesian-filtering-recurrent-neural-network) was very limited in variety and without hair.
+
+## The dataset
+
+There is a prepared dataset with approx. 96000 faces, full pose annotations and 68 3d landmarks in AFLW2k-3D / 300W-LP format.
+[Download from Google Drive](https://drive.google.com/file/d/17WphiAB5JPYxOOSu4k2iwKqrDWPlqTh-/view?usp=drive_link)
+
+Full size image with visu
+![](doc/replicantface.jpg)
+
+Closeups
+![](doc/panel.jpg)
+
+More info can be found under [dataset.md](doc/dataset.md) and [rawdata.md](doc/rawdata/rawdata.md)
 
 ## Usage
 
-### Batchprocessing example
-```Python
-#!/bin/env python
+This project will not work out of the box. First, get HumGen3d for Blender.
 
-# Run blender without gui. Only a certain batchsize of images then restart
-# until desired number of images was rendered.
-from typing import Literal
-import subprocess
-from os.path import dirname, join
+Then consider the scene assets. See [assets/readme.md](assets/readme.md). At least some backgrounds would be requried.
+You can download any HDRI you want and place them in the `hdris` folder. For the HDRIs listed, the `randomize_env` module 
+has multipliers to make the brightness more uniform.
 
-blender="<install dir>/blender"
-scene=join(dirname(__file__),'human_scene.blend')
-script=join(dirname(__file__),'make_faces.py')
-outdir="<destination dir>"
-batchsize=100
-device : Literal['CPU','CUDA'] = 'CUDA'
+The paid accessories are not in this repo for obvious reasons. The scripts
+will work without them. For more variety get assets to your preference, put them next to the existing assets in the scene
+hierarchy in (`human_scene-v3.blend`), ensure they fit the human model, and adjust material assignments. You can use the
+remaining models as guideline. The module `replicantface/randomize_accessoires.py` must then be changed. Its main
+responsibility is random sampling of accessories, prevention of unreasonable combinations. The issue hereby is that
+it contains hardcoded names and logic for the missing paid models.
 
-count=200
-start=0
+The last step involving the assets is copying the files from `assets/humgen-assets` to HumGen3D's true asset folder.
 
-end=start+count
-for i in range(start, end, batchsize):
-    my_batchsize = min(batchsize, end-i)
-    subprocess.check_call([
-        blender,
-        scene,
-        *'--log 0 -b --offline-mode'.split(' '),
-        '-P', script, '--',
-        '--cycles-device', device,
-        '--start', str(i), '--count', str(my_batchsize), '-o', outdir
-    ])
-```
+Afterwards things should be ready to go. `make_faces.py` is the main entry point. It can be loaded in Blenders script
+editor and ran interactively. The same can be done with the modules in `replicantface` which is useful for development.
+After generating a random human, it renders, composits and dumps the image, segmentation mask and labels to disk.
 
-### Postprocessing example
+For generating datasets, take a look at `run_blender.py`. It runs Blender in headless mode and executes `make_faces.py`
+in a loop for a given number of times.
+The raw labels contain dense face vertices, the model-view transformation matrix (thus the head pose), and projection matrix.
+They can be converted by `auxiliary_scripts/convert_to_300wlp_type_dataset.py` to the AFLW2k-3D / 300W-LP format.
 
-TODO
-
-## License
-
-MIT?
+You might want to change the pose distribution as the current settings doesn't deliver optimal benchmark results as
+explained in [dataset.md](doc/dataset.md). The relevant code is found in `replicantface/randomize_pose.py`:
+`randomize_camera` and `randomize_pose`.

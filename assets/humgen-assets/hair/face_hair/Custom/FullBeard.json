@@ -1,0 +1,35 @@
+{
+    "blend_file": "FullBeard.blend",
+    "hair_systems": {
+        "fh_Mustache_High": {
+            "length": 0.5,
+            "children_amount": 20,
+            "path_steps": 4
+        },
+        "fh_Side_Lines": {
+            "length": 0.6392694115638733,
+            "children_amount": 20,
+            "path_steps": 3
+        },
+        "fh_soul_patch": {
+            "length": 1.0,
+            "children_amount": 10,
+            "path_steps": 3
+        },
+        "fh_sideburns_low": {
+            "length": 0.981506884098053,
+            "children_amount": 20,
+            "path_steps": 1
+        },
+        "fh_beard_medium": {
+            "length": 1.0,
+            "children_amount": 10,
+            "path_steps": 3
+        },
+        "fh_neck": {
+            "length": 1.0,
+            "children_amount": 25,
+            "path_steps": 2
+        }
+    }
+}
