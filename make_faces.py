@@ -22,7 +22,7 @@ for k in list(sys.modules.keys()):
 
 
 from replicantface import (export_face_params, 
-                           randomize_pose, 
+                           randomize_body_pose, 
                            randomize_expression,
                            hide_object, 
                            find_hum, 
@@ -40,8 +40,10 @@ from replicantface import (export_face_params,
                            setup_extra_face_material_selection, 
                            update_compositing,
                            fix_shapekeys,
-                           randomize_camera,
-                           HeadCoverage)
+                           randomize_camera_parameters,
+                           HeadCoverage,
+                           sample_pose,
+                           PoseSample)
 
 
 class Randomizer:
@@ -85,7 +87,7 @@ class Randomizer:
             randomize_body_shape(hum)
 
         if 1: # Pose
-            randomize_pose(hum)
+            randomize_body_pose(hum)
 
         if 1: # Expression
             randomize_expression(hum, p_neutral=0.2, p_eyes_closed=0.05, p_open_mouth=0.2)
@@ -110,8 +112,9 @@ class Randomizer:
         hum = self._get_human()
         fix_shapekeys(hum)
         hum_obj = hum.objects.rig
+        sample_pose().apply_to_scene(self.cam, hum)
         self._randomize_human(hum)
-        randomize_camera(self.cam, hum_obj, bpy.data.scenes['EnvScene'].objects['Camera2'])
+        randomize_camera_parameters(self.cam, bpy.data.scenes['EnvScene'].objects['Camera2'])
         update_child_of_constraint(self._env.rotation_helper, hum_obj, 'head')
         self._env.randomize()
         bpy.context.view_layer.update()

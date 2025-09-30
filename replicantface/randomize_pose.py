@@ -1,3 +1,4 @@
+import dataclasses
 import bpy
 from math import pi
 from os.path import join, dirname
@@ -18,6 +19,8 @@ from functools import partial
 from typing import Any
 import math
 from math import pi
+from numpy.typing import NDArray
+
 
 if __name__ == '__main__':
     import sys
@@ -117,51 +120,77 @@ def fix_shapekeys(hum : Human):
             vertices[i].co = q
 
 
-def randomize_pose(hum : Human):
-    rig : bpy.types.Object = hum.objects.rig
-    # Change heading
-    rig.rotation_euler[2] = random.uniform(0, 2.*pi)
+@dataclasses.dataclass
+class PoseSample:
+    head_heading : float
+    head_pitch : float
+    head_roll : float
+    cam_heading : float
+    cam_pitch : float
+    cam_roll : float
 
+    def apply_to_scene(self, cam : bpy.types.Object, hum : Human):
+        body : bpy.types.Object = hum.objects.body
+        rig : bpy.types.Object = hum.objects.rig
+
+        # Camera parameters
+        update_child_of_constraint(cam.parent, body, 'head')
+
+        # Change heading of the whole model. Essentially only rotates the whole 
+        # scene against the background.
+        rig_heading = random.uniform(0, 2.*pi)
+        rig.rotation_euler[2] = rig_heading
+
+        bones = rig.pose.bones
+        headbone = bones['head']
+        neckbone = bones['neck']
+        for b in [ headbone, neckbone ]:
+            b.rotation_mode = 'XYZ'
+            b.rotation_euler = (self.head_pitch/2.,self.head_heading/2.,self.head_roll/2.)
+
+        cam.parent.rotation_euler[2] = rig_heading + self.cam_heading
+        cam.parent.rotation_euler[1] = self.cam_roll
+        cam.parent.rotation_euler[0] = pi/2. + self.cam_pitch
+
+
+def sample_pose():
+    heading = 70./180.*pi*random_beta_11(3.)
+    pitch = 45./180.*pi*random_beta_11(3.)
+    roll = 30./180.*pi*random_beta_11(3.)
+
+    if False: #random.randint(0,100) == 0:
+        cam_heading = random.uniform(-pi,pi)
+    else:
+        cam_heading = random_beta_11(3.)*100.*pi/180. # Relative to the face
+    cam_pitch = random_beta_11(3.)*30.*pi/180. # Relative to the world
+
+    return PoseSample(
+        head_heading=heading,
+        head_pitch=pitch,
+        head_roll=roll,
+        cam_heading = cam_heading,
+        cam_pitch = cam_pitch,
+        cam_roll = 0.
+    )
+
+
+
+def randomize_body_pose(hum : Human):
     # Change body pose
     if 0:
         new_pose = 'poses/'+random.choice(POSES)
         #print ("Selected Pose: ", new_pose)
         hum.pose.set(new_pose, context = bpy.context)
         print ("selected pose: ", new_pose)
-
-    # Change head direction
-    heading = 70./180.*pi*random_beta_11(3.)
-    pitch = 45./180.*pi*random_beta_11(3.)
-    roll = 30./180.*pi*random_beta_11(3.)
-    bones = rig.pose.bones
-    headbone = bones['head']
-    neckbone = bones['neck']
-    for b in [ headbone, neckbone ]:
-        b.rotation_mode = 'XYZ'
-        b.rotation_euler = (pitch/2.,heading/2.,roll/2.)
     
     # change gaze direction
-    eyetarget = bones['eyeball_lookat_master']
+    rig : bpy.types.Object = hum.objects.rig
+    eyetarget = rig.pose.bones['eyeball_lookat_master']
     eyetarget.location[0] = 0.1 * random_beta_11(3.)
     eyetarget.location[2] = 0.03 * random_beta_11(3.)
 
 
-
-def randomize_camera(cam : bpy.types.Object, hum_object : bpy.types.Object, env_cam : bpy.types.Object):
-    # Camera parameters
-    update_child_of_constraint(cam.parent, hum_object, 'head')
-
-    rig_heading = hum_object.rotation_euler[2]
-
-    if False: #random.randint(0,100) == 0:
-        heading = random.uniform(-pi,pi)
-    else:
-        heading = random_beta_11(3.)*100.*pi/180. # Relative to the face
-    pitch = random_beta_11(3.)*30.*pi/180. # Relative to the world
-    if 1:
-        cam.parent.rotation_euler[2] = rig_heading + heading
-        cam.parent.rotation_euler[1] = 0.
-        cam.parent.rotation_euler[0] = pi/2. + pitch
+def randomize_camera_parameters(cam : bpy.types.Object, env_cam : bpy.types.Object):
     distance = cam.location[2]
     cam.data.dof.focus_distance = distance
     # Env cam
@@ -184,5 +213,8 @@ if __name__ == '__main__':
     cam = bpy.context.scene.objects['Camera']
     hum = find_hum()
     fix_shapekeys(hum)
-    randomize_pose(hum)
-    randomize_camera(cam, hum.objects.rig, bpy.data.scenes['EnvScene'].objects['Camera2'])
+    randomize_body_pose(hum)
+    randomize_camera_parameters(cam, bpy.data.scenes['EnvScene'].objects['Camera2'])
+
+    pose_sample = sample_pose()
+    pose_sample.apply_to_scene(cam, hum)

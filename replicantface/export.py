@@ -135,25 +135,36 @@ def update_compositing(scene : bpy.types.Scene):
     scene.node_tree.nodes["ImageOutput"].file_slots[0].path = splitext(basename(image_filename))[0]+'_image'
 
 
-def export_face_params(hum_object : bpy.types.Object, cam : bpy.types.Object):
-    image_path = Path(bpy.context.scene.render.filepath)
-    label_path = image_path.with_suffix('.npz')
+def compute_model_view_matrix(hum_object : bpy.types.Object, cam : bpy.types.Object):
     headbone = hum_object.pose.bones['head']
     m_world = hum_object.matrix_world @ headbone.matrix
     m_cam = cam.matrix_world.inverted() @ m_world
-    render = bpy.context.scene.render
+    return np.asarray(matrix_to_list(m_cam), dtype=np.float32)
+
+
+def compute_projection_matrix(cam : bpy.types.Object, render):
     proj_matrix = cam.calc_matrix_camera(
         bpy.context.view_layer.depsgraph,
         x = render.resolution_x,
         y = render.resolution_y,
         scale_x = render.pixel_aspect_x,
         scale_y = render.pixel_aspect_y)
-    vertices = get_face_vertices(hum_object) # Only the vertices of the head are saved.
-    m_cam = matrix_to_list(m_cam)
     proj_matrix = matrix_to_list(proj_matrix)
+    return np.asarray(proj_matrix, dtype=np.float32)
+
+
+def export_face_params(hum_object : bpy.types.Object, cam : bpy.types.Object):
+    image_path = Path(bpy.context.scene.render.filepath)
+    label_path = image_path.with_suffix('.npz')
+    render = bpy.context.scene.render
+
+    m_cam = compute_model_view_matrix(hum_object, cam)
+    m_projection = compute_projection_matrix(cam, render)
+    vertices = get_face_vertices(hum_object) # Only the vertices of the head are saved.
+
     np.savez_compressed(str(label_path),
-                        modelview = np.asarray(m_cam, dtype=np.float32),
-                        projection = np.asarray(proj_matrix, dtype=np.float32),
+                        modelview = m_cam,
+                        projection = m_projection,
                         vertices = np.asarray(vertices, dtype=np.float16),
                         resolution = render.resolution_x)
 
