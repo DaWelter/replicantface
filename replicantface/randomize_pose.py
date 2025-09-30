@@ -154,15 +154,15 @@ class PoseSample:
 
 
 def sample_pose():
-    heading = 70./180.*pi*random_beta_11(3.)
-    pitch = 45./180.*pi*random_beta_11(3.)
-    roll = 30./180.*pi*random_beta_11(3.)
+    heading = 70./180.*pi*random_beta_11(4.)
+    pitch = 40./180.*pi*random_beta_11(4.)
+    roll = 30./180.*pi*random_beta_11(4.)
 
     if False: #random.randint(0,100) == 0:
         cam_heading = random.uniform(-pi,pi)
     else:
-        cam_heading = random_beta_11(3.)*100.*pi/180. # Relative to the face
-    cam_pitch = random_beta_11(3.)*30.*pi/180. # Relative to the world
+        cam_heading = random_beta_11(4.)*90.*pi/180. # Relative to the face
+    cam_pitch = (-5. + random_beta_11(4.)*20.)*pi/180. # Relative to the world
 
     return PoseSample(
         head_heading=heading,
