@@ -7,3 +7,5 @@ hdris/*.exr
 *.pyc
 __pycache__
 *.blend1
+*.egg-info
+assets/all-accessories.blend

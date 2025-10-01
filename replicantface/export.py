@@ -15,6 +15,14 @@ from pathlib import Path
 
 from HumGen3D import Human, HumGenException
 
+if __name__ == '__main__':
+    # Trigger reimport when the script is run again.
+    for k in list(sys.modules.keys()):
+        if 'replicantface' in k:
+            del sys.modules[k]
+
+from replicantface.utils import replicantface_folder
+
 
 def matrix_to_list(m):
     return list(list(col) for col in m)
@@ -22,7 +30,7 @@ def matrix_to_list(m):
 
 @functools.lru_cache()
 def get_face_vertex_indices():
-    f = np.load(join(dirname(bpy.data.filepath),'head_indices.npz'))
+    f = np.load(replicantface_folder() / 'head_indices.npz')
     try:
         return f['indices']
     finally:
@@ -82,9 +90,9 @@ def setup_extra_face_material_selection(hum_obj : bpy.types.Object):
     clone_human_mat('.Face')
     clone_human_mat('.Ears')
 
-    indices = np.load(join(dirname(bpy.data.filepath),'skull_polygon_indices.npz'))['indices']
+    indices = np.load(replicantface_folder() /'skull_polygon_indices.npz')['indices']
     assign_material(indices, '.Face')
-    indices = np.load(join(dirname(bpy.data.filepath),'ears_polygon_indices.npz'))['indices']
+    indices = np.load(replicantface_folder() / 'ears_polygon_indices.npz')['indices']
     assign_material(indices, '.Ears')
 
 

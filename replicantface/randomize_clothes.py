@@ -19,12 +19,13 @@ import colorsys
 from typing import Sequence, cast
 
 if __name__ == '__main__':
-    sys.path.append(Path(bpy.data.filepath).parent.as_posix())
+    # Trigger reimport when the script is run again.
     for k in list(sys.modules.keys()):
         if 'replicantface' in k:
             del sys.modules[k]
 
 from replicantface.persistent_shuffled_cycle import PersistentShuffledCycle
+from replicantface.utils import replicantface_folder
 
 
 CLOTHES_FEMALE = [
@@ -69,7 +70,7 @@ CLOTHES_MALE = [
 
 class ClothesRandomizer:
     def __init__(self, p_naked : float, p_pattern : float):
-        dir = Path(bpy.data.filepath).parent
+        dir = replicantface_folder()
         self._preset_cycle = {
             'male' : PersistentShuffledCycle(CLOTHES_MALE, dir / 'state' / 'clothes_male.txt'),
             'female' : PersistentShuffledCycle(CLOTHES_FEMALE, dir / 'state' / 'clothes_female .txt')

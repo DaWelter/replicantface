@@ -20,6 +20,15 @@ from typing import Any, Literal
 import math
 from PIL import Image
 
+if __name__ == '__main__':
+    # Trigger reimport when the script is run again.
+    for k in list(sys.modules.keys()):
+        if 'replicantface' in k:
+            del sys.modules[k]
+
+from replicantface.utils import replicantface_folder
+
+
 def smooth_coin_flip(minval, maxval):
     # The middle range from 0.1 to 0.9 has 30% probability to find a value in there. The other 60% of the probability
     # mass is split off on the sides.
@@ -48,7 +57,7 @@ def l1_limit(x, max_norm=1.):
 
 @functools.lru_cache(maxsize=1)
 def get_uglification_layer(gender : Literal['male','female']) -> Image.Image:
-    return Image.open(Path(bpy.data.filepath).parent / 'assets' / f'{gender}_uglification_layer.png')
+    return Image.open(replicantface_folder() / 'assets' / f'{gender}_uglification_layer.png')
 
 
 def set_texture(hum : Human, texture_idx : int, gender : Literal['male','female'], uglified: bool):

@@ -16,14 +16,13 @@ import itertools
 import math
 
 if __name__ == '__main__':
-    import sys
-    sys.path.append(Path(bpy.data.filepath).parent.as_posix())
+    # Trigger reimport when the script is run again.
     for k in list(sys.modules.keys()):
         if 'replicantface' in k:
             del sys.modules[k]
 
-
 from replicantface.persistent_shuffled_cycle import PersistentShuffledCycle
+from replicantface.utils import replicantface_folder
 
 
 class EnvRandomizer:
@@ -31,7 +30,7 @@ class EnvRandomizer:
         # from https://polyhaven.com/hdris/skies/overcast
         # and https://ambientcg.com
         self.p_custom_light = p_custom_light
-        self.ENVS = list((Path(bpy.data.filepath).parent / 'hdris').glob('*.exr'))
+        self.ENVS = list((replicantface_folder() / 'hdris').glob('*.exr'))
         self.strength_corrections = {
             'EveningEnvironmentHDRI002_1K-HDR.exr': 5.,
             'EveningEnvironmentHDRI004_1K-HDR.exr': 4.,
@@ -79,8 +78,7 @@ class EnvRandomizer:
         self.rotation_helper = env_coll.objects['RotationHelper']
 
         assert len(self.ENVS) > 10
-        dir = Path(bpy.data.filepath).parent
-        self._cycle = PersistentShuffledCycle(self.ENVS, dir / 'state' / 'env.txt')
+        self._cycle = PersistentShuffledCycle(self.ENVS, replicantface_folder() / 'state' / 'env.txt')
 
     def _disable_lights(self):
         for o in self._lights:
@@ -107,6 +105,8 @@ class EnvRandomizer:
         tex.image = bpy.data.images.load(str(bg), check_existing=True) 
         mat = bpy.context.scene.world.node_tree.nodes["Background"]
         mat.inputs['Strength'].default_value = strength
+        texture_coord_mapping = bpy.data.worlds["World"].node_tree.nodes["Mapping"]
+        texture_coord_mapping.inputs[2].default_value[2] = random.uniform(0.,math.pi*2.)
     
     def randomize(self):
         if random.uniform(0., 1.) <  self.p_custom_light:
@@ -118,5 +118,5 @@ class EnvRandomizer:
 
 
 if __name__ == '__main__':
-    scene = EnvRandomizer(p_custom_light=0.0)
+    scene = EnvRandomizer(p_custom_light=0.5)
     scene.randomize()

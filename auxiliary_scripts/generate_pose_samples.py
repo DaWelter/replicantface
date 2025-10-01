@@ -10,13 +10,11 @@ import sys
 import sys
 import numpy as np
 
-# Enable import of the replicantface package
-sys.path.append(Path(bpy.data.filepath).parent.as_posix())
-
-# Trigger reimport when the script is run again.
-for k in list(sys.modules.keys()):
-    if 'replicantface' in k:
-        del sys.modules[k]
+if __name__ == '__main__':
+    # Trigger reimport when the script is run again.
+    for k in list(sys.modules.keys()):
+        if 'replicantface' in k:
+            del sys.modules[k]
 
 
 from replicantface import (
@@ -38,7 +36,7 @@ if __name__ == '__main__':
     outputs = []
 
     for i in range(NUM_SAMPLES):
-        sample_pose().apply_to_scene(cam, hum)
+        sample_pose(wide_distribution=True).apply_to_scene(cam, hum)
         m = compute_model_view_matrix(hum_obj, cam)
         outputs.append(m)
         # This is very very slow, but needed to update the matrices.

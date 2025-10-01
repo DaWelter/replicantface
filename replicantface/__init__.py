@@ -6,5 +6,5 @@ from .randomize_hair import Hair
 from .randomize_expression import randomize_expression
 from .randomize_clothes import ClothesRandomizer
 from .export import export_face_params, setup_extra_face_material_selection, update_compositing, compute_model_view_matrix, compute_projection_matrix
-from .utils import find_hum, hide_object, update_child_of_constraint, HeadCoverage
+from .utils import find_hum, hide_object, update_child_of_constraint, HeadCoverage, replicantface_folder
 from .persistent_shuffled_cycle import PersistentShuffledCycle

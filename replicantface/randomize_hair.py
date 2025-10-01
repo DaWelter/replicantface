@@ -3,12 +3,10 @@ from math import pi
 from os.path import join, dirname
 from pathlib import Path
 from HumGen3D import Human, HumGenException
-
 import random
 
 if __name__ == '__main__':
-    import sys
-    sys.path.append(Path(bpy.data.filepath).parent.as_posix())
+    # Trigger reimport when the script is run again.
     for k in list(sys.modules.keys()):
         if 'replicantface' in k:
             del sys.modules[k]

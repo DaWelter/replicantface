@@ -14,11 +14,12 @@ import functools
 import numpy as np
 import os
 import shutil
-from functools import partial
+from functools import partial, lru_cache
 from typing import Any, NamedTuple, Literal
 import math
 from pathlib import Path
 import copy
+from HumGen3D import Human
 
 
 def find_hum(gender : str | None = None) -> Human:
@@ -53,6 +54,18 @@ def update_child_of_constraint(obj : bpy.types.Object, target : bpy.types.Object
 
 def random_beta_11(concentration):
     return 2.*(random.betavariate(concentration,concentration) - 0.5)
+
+
+@lru_cache
+def replicantface_folder() -> Path:
+    candidates = [
+        Path(bpy.data.filepath).parent,
+        Path(os.getcwd()),
+    ]
+    for path in candidates:
+        if (path / 'replicantface').is_dir() and (path / 'hdris').is_dir() and (path / 'assets').is_dir():
+            return path
+    raise RuntimeError("Cannot find replicantface folder")
 
 
 HeadTopCoverage = Literal['none','loose','tight']

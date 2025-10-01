@@ -12,13 +12,11 @@ import shutil
 import numpy as np
 import os
 
-# Enable import of the replicantface package
-sys.path.append(Path(bpy.data.filepath).parent.as_posix())
-
-# Trigger reimport when the script is run again.
-for k in list(sys.modules.keys()):
-    if 'replicantface' in k:
-        del sys.modules[k]
+if __name__ == '__main__':
+    # Trigger reimport when the script is run again.
+    for k in list(sys.modules.keys()):
+        if 'replicantface' in k:
+            del sys.modules[k]
 
 
 from replicantface import (export_face_params, 
@@ -55,6 +53,7 @@ class Randomizer:
         self._hair = Hair()
         self._env = EnvRandomizer(p_custom_light=0.05)
         self._clothes = ClothesRandomizer(p_naked=0.01, p_pattern=0.2)
+        self._hum = self._get_human()
 
 
     def _get_human(self):
@@ -69,10 +68,12 @@ class Randomizer:
             hum = Human.from_preset('models/male/Caucasian Presets/Caucasian 1.json', bpy.context)
         else:
             hum = Human.from_preset('models/female/Caucasian presets/Caucasian 1.json', bpy.context)
+        fix_shapekeys(hum)
         return hum
 
 
-    def _randomize_human(self, hum : Human):
+    def _randomize_human(self):
+        hum = self._hum
         age = random.randint(20,70)
         if 1:
             hum.age.set(age)
@@ -89,12 +90,6 @@ class Randomizer:
         if 1: # Pose
             randomize_body_pose(hum)
 
-        if 1: # Expression
-            randomize_expression(hum, p_neutral=0.2, p_eyes_closed=0.05, p_open_mouth=0.2)
-
-        if 1: # Eyes
-            hum.eyes.randomize()
-
         if 1: # Accessoires
             update_child_of_constraint(self._accessoires.root, hum.objects.rig, 'head')
             head_covered = self._accessoires.enable_randomly()
@@ -108,15 +103,25 @@ class Randomizer:
             self._clothes.randomize(hum)
 
 
-    def randomize(self):
-        hum = self._get_human()
-        fix_shapekeys(hum)
+    def _randomize_expressions(self):
+        hum = self._hum
+        if 1: # Expression
+            randomize_expression(hum, p_neutral=0.2, p_eyes_closed=0.05, p_open_mouth=0.2)
+        if 1: # Eyes
+            hum.eyes.randomize()        
+
+
+    def randomize(self,*, new_human : bool, expression_and_env : bool):
+        hum = self._hum
         hum_obj = hum.objects.rig
-        sample_pose().apply_to_scene(self.cam, hum)
-        self._randomize_human(hum)
-        randomize_camera_parameters(self.cam, bpy.data.scenes['EnvScene'].objects['Camera2'])
-        update_child_of_constraint(self._env.rotation_helper, hum_obj, 'head')
-        self._env.randomize()
+        if new_human:
+            sample_pose(wide_distribution=True).apply_to_scene(self.cam, self._hum)
+            self._randomize_human()
+        if expression_and_env:
+            self._randomize_expressions()
+            randomize_camera_parameters(self.cam, bpy.data.scenes['EnvScene'].objects['Camera2'])
+            update_child_of_constraint(self._env.rotation_helper, hum_obj, 'head')
+            self._env.randomize()
         bpy.context.view_layer.update()
         return hum, hum_obj, self.cam
 
@@ -144,18 +149,28 @@ if __name__ == '__main__':
         argv = argv[1:]  
     if not bpy.app.background: # Can be run in the editor, too.
         randomizer = Randomizer()
-        _, hum_obj, _ = randomizer.randomize()
+        _, hum_obj, _ = randomizer.randomize(new_human=True, expression_and_env=False)
         setup_extra_face_material_selection(hum_obj)
         update_compositing(bpy.context.scene)
     else: 
         # Headless mode
         parser = argparse.ArgumentParser()
-        parser.add_argument("-num")
+        partial_gen_group = parser.add_mutually_exclusive_group()
+        partial_gen_group.add_argument("--dump-new-human", type=str, default='', 
+                                       help="Writes the scene as blender file to the given filename")
+        partial_gen_group.add_argument("--randomize-existing", action="store_true", default=False,
+                                       help="Assumes a human exists and only varies facial expressions, env and so on.")
         parser.add_argument("--cycles-device", help="dummy")
         args = parser.parse_args(argv)
         image_prefix_path = Path(bpy.context.scene.render.filepath)
         randomizer = Randomizer()
-        _, hum_obj, cam = randomizer.randomize()
+        if args.randomize_existing:
+            _, hum_obj, cam = randomizer.randomize(new_human=False, expression_and_env=True)
+        elif args.dump_new_human:
+            _, hum_obj, cam = randomizer.randomize(new_human=True, expression_and_env=False)
+            bpy.ops.wm.save_mainfile(filepath=args.dump_new_human, check_existing=False)
+        else:
+            _, hum_obj, cam = randomizer.randomize(new_human=True, expression_and_env=True)
         setup_extra_face_material_selection(hum_obj)
         update_compositing(bpy.context.scene)
         render_and_save(image_prefix_path)

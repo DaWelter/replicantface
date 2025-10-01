@@ -18,13 +18,11 @@ import shutil
 from functools import partial
 from typing import Any
 import math
-from math import pi
 from numpy.typing import NDArray
 
 
 if __name__ == '__main__':
-    import sys
-    sys.path.append(Path(bpy.data.filepath).parent.as_posix())
+    # Trigger reimport when the script is run again.
     for k in list(sys.modules.keys()):
         if 'replicantface' in k:
             del sys.modules[k]
@@ -136,11 +134,6 @@ class PoseSample:
         # Camera parameters
         update_child_of_constraint(cam.parent, body, 'head')
 
-        # Change heading of the whole model. Essentially only rotates the whole 
-        # scene against the background.
-        rig_heading = random.uniform(0, 2.*pi)
-        rig.rotation_euler[2] = rig_heading
-
         bones = rig.pose.bones
         headbone = bones['head']
         neckbone = bones['neck']
@@ -148,21 +141,38 @@ class PoseSample:
             b.rotation_mode = 'XYZ'
             b.rotation_euler = (self.head_pitch/2.,self.head_heading/2.,self.head_roll/2.)
 
-        cam.parent.rotation_euler[2] = rig_heading + self.cam_heading
+        cam.parent.rotation_euler[2] = self.cam_heading
         cam.parent.rotation_euler[1] = self.cam_roll
         cam.parent.rotation_euler[0] = pi/2. + self.cam_pitch
 
 
-def sample_pose():
-    heading = 70./180.*pi*random_beta_11(4.)
-    pitch = 40./180.*pi*random_beta_11(4.)
-    roll = 30./180.*pi*random_beta_11(4.)
-
-    if False: #random.randint(0,100) == 0:
-        cam_heading = random.uniform(-pi,pi)
+def sample_pose(wide_distribution : bool = False):
+    if wide_distribution:
+        # Wider distributions because using uniform distributions.
+        # For the camera pitch there is also a uniform range specified. But due to how rotations 
+        # work, the actual pitch/roll distribution of the face in camera space will be "softened",
+        # looking more like a gaussian.
+        # To compensate, the camera could be rolled. I'd rather keep the horizon level though.
+        heading = 70./180.*pi*random.uniform(-1.,1.)
+        cam_heading = 80./180.*pi*random.uniform(-1.,1.) + heading
+        cam_pitch = pi/180.*(-5.+40.*random.uniform(-1.,1.))
+        while True:
+            # Relative to the camera, as well as relative to the body (for realism) we want at 
+            # most 40 deg pitch.
+            pitch = 40./180.*pi*random.uniform(-1.,1.) + cam_pitch
+            if abs(pitch) < 40./180.*pi:
+                break
+        roll = 30./180.*pi*random_beta_11(2.)
     else:
-        cam_heading = random_beta_11(4.)*90.*pi/180. # Relative to the face
-    cam_pitch = (-5. + random_beta_11(4.)*20.)*pi/180. # Relative to the world
+        heading = 70./180.*pi*random_beta_11(4.)
+        pitch = 40./180.*pi*random_beta_11(4.)
+        roll = 30./180.*pi*random_beta_11(4.)
+
+        if False: #random.randint(0,100) == 0:
+            cam_heading = random.uniform(-pi,pi)
+        else:
+            cam_heading = random_beta_11(4.)*90.*pi/180.
+        cam_pitch = (-5. + random_beta_11(4.)*20.)*pi/180. # Relative to the world
 
     return PoseSample(
         head_heading=heading,
@@ -174,12 +184,12 @@ def sample_pose():
     )
 
 
-
 def randomize_body_pose(hum : Human):
     # Change body pose
     if 0:
+        # Probably not needed. In FaceSynth, it looks like the mostly the head moves
+        # and the rest of the body remains in default pose.
         new_pose = 'poses/'+random.choice(POSES)
-        #print ("Selected Pose: ", new_pose)
         hum.pose.set(new_pose, context = bpy.context)
         print ("selected pose: ", new_pose)
     

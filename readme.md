@@ -37,6 +37,11 @@ More info can be found under [dataset.md](doc/dataset.md) and [rawdata.md](doc/r
 
 This project will not work out of the box. First, get HumGen3d for Blender.
 
+Install the replicantface package in Blenders Python distribution. This way the main script can conveniently import
+all the submodules. The `-e` causes symlinks to be created such that changes in the original source are reflected in the
+installed package. You can use `pip uninstall` to remove the package again.
+`<blender dir>/<version>/python/bin/python* -m pip install -e .` 
+
 Then consider the scene assets. See [assets/readme.md](assets/readme.md). At least some backgrounds would be requried.
 You can download any HDRI you want and place them in the `hdris` folder. For the HDRIs listed, the `randomize_env` module 
 has multipliers to make the brightness more uniform.

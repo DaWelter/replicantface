@@ -17,14 +17,15 @@ import shutil
 from typing import NamedTuple
 import colorsys
 
+
 if __name__ == '__main__':
-    import sys
-    sys.path.append(Path(bpy.data.filepath).parent.as_posix())
+    # Trigger reimport when the script is run again.
     for k in list(sys.modules.keys()):
         if 'replicantface' in k:
             del sys.modules[k]
 
-from replicantface.utils import hide_object, HeadCoverage
+
+from replicantface.utils import hide_object, HeadCoverage, update_child_of_constraint, find_hum
 
 
 class Accessoires:
@@ -160,7 +161,9 @@ class Accessoires:
 
 
 if __name__ == '__main__':
+    hum = find_hum()
     accessoires = Accessoires(0.8,0.8,0.8, 0.1)
+    update_child_of_constraint(accessoires.root, hum.objects.rig, 'head')
     hc = accessoires.enable_randomly()
     print (hc)
     accessoires.randomize_materials()
