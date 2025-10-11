@@ -23,15 +23,14 @@ Mixing in 8% Replicantface into other training data.
 | wo/ LMK                   | 4.16        | 2.70        |  2.53          |   3.13        | 5.15             |
 | wo/ LMK, w/ Replicantface | 4.14        | 2.69        |  2.51          | **3.11**      |**5.12**          |
 
+(Metrics averaged over four networks.)
+
 By default, I use auxiliary landmark predictions (to be able to use FaceSynthetics). For the results labeled "wo /LMK"
 it was disabled.
 
-The benefits are small. However, there might be benefits which are not captured in the benchmark, e.g. better generalization to glasses and pronounced facial expressions. Need more analysis. 
+The benefits are small. However, there might be benefits which are not captured in the benchmark, e.g. better generalization to glasses and pronounced facial expressions. Need more analysis.
 
 ## Details
-
-The bounding boxes are created from the skin segmentation. This gave better results for my models than
-using the facial mesh.
 
 Regarding diversity there are different skin tones and textures and face shapes reasonably uniformly sampled (I think).
 There are around 30 accessories like glasses, hats, masks, helmets and headphones,
@@ -45,6 +44,8 @@ distribution for FaceSynthetics I used a pose estimation network. They are only 
 One notable thing is the bias to ca 5 deg. pitch. This was important for maximizing the benchmark score on AFLW2k-3D and matching my networks performances with training on FaceSynthetics.
 
 Beware that the default settings for ReplicantFace will not produce this distribution. The current data stems from a combination of the default with a correction with more samples which I added later to achieve the pitch bias. See below.
+
+The bounding boxes are created from facial vertices. Samples with bounding boxes (based on the face segmentation this time) smaller than 32 pixels were filtered out. Samples with yaw larger than 90 deg were also filtered.
 
 The size distribution of the bounding boxes is shown next. The faces only fill half of the images to allow for
 shift augmentation with visible background.
@@ -73,50 +74,6 @@ used.
 ## Details about the pitch correction
 
 75k samples were created with the default setting at the time of this writing.
-Then 25k more were created with the following patch to `randomize_pose.py`:
-```diff
-@@ -130,9 +130,9 @@ def randomize_pose(hum : Human):
-         print ("selected pose: ", new_pose)
- 
-     # Change head direction
--    heading = 70./180.*pi*random_beta_11(3.)
--    pitch = 45./180.*pi*random_beta_11(3.)
--    roll = 30./180.*pi*random_beta_11(3.)
-+    heading = 70./180.*pi*random_beta_11(4.)
-+    pitch = (random_beta_11(4.)*20.+3.) /180.*pi # Positive pitch = looking down
-+    roll = 10./180.*pi*random_beta_11(4.)
-     bones = rig.pose.bones
-     headbone = bones['head']
-     neckbone = bones['neck']
-@@ -148,22 +148,21 @@ def randomize_pose(hum : Human):
- 
- 
- def randomize_camera(cam : bpy.types.Object, hum_object : bpy.types.Object, env_cam : bpy.types.Object):
--    # Camera parameters
-+    assert cam.parent is not None
-+
-     update_child_of_constraint(cam.parent, hum_object, 'head')
- 
-     rig_heading = hum_object.rotation_euler[2]
- 
--    if False: #random.randint(0,100) == 0:
--        heading = random.uniform(-pi,pi)
--    else:
--        heading = random_beta_11(3.)*100.*pi/180.
--    pitch = random_beta_11(3.)*30.*pi/180.
--    if 1:
--        cam.parent.rotation_euler[2] = rig_heading + heading
--        cam.parent.rotation_euler[1] = 0.
--        cam.parent.rotation_euler[0] = pi/2. + pitch
-+    heading = random_beta_11(4.)*70.*pi/180.
-+    pitch = (random_beta_11(4.)*5. - 2.)*pi/180. # positive values make the camera look up and thus cause positive pitch of the face.
-+    cam.parent.rotation_euler[2] = rig_heading + heading
-+    cam.parent.rotation_euler[1] = 0.
-+    cam.parent.rotation_euler[0] = pi/2. + pitch # This is *not* added to the face pitch
-+
-     distance = cam.location[2]
-     cam.data.dof.focus_distance = distance
-+    
-     # Env cam
-     env_cam.data.lens = random.choice([25.,30.,50.,70.])
-```
+[Link to tag](https://github.com/DaWelter/replicantface/tree/release-replicant-face-v4-like-300wlp-zip).
+Then 25k more were created with a patch to `randomize_pose.py` which is shown
+in [this comparison](https://github.com/DaWelter/replicantface/compare/release-replicant-face-v4-like-300wlp-zip...pose-distribution-change-like-synface)
