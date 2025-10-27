@@ -300,7 +300,7 @@ def as_hpb(rot):
     return rot.as_euler('YXZ')
 
 
-def convert_replicantface_folder(sources : list[str], destination : str, count : int | None):
+def convert_replicantface_folder(sources : list[str], destination : str, count : int | None, parent_in_zip : Path):
     """Converst and zips the files that the blender script creates.
     
     The output format is mostly compatible with the 300wlp and aflw2000-3d datasets.
@@ -309,6 +309,7 @@ def convert_replicantface_folder(sources : list[str], destination : str, count :
     Beware, the roi is the facial bounding box in x0y0x1y1 format. This is different from the other datasets.
     """
     assert destination.endswith(".zip")
+    assert not parent_in_zip.is_absolute()
 
     label_files = sorted(list(itertools.chain.from_iterable(
         Path(s).glob('face_[0-9]*.npz') for s in sources)))
@@ -338,7 +339,7 @@ def convert_replicantface_folder(sources : list[str], destination : str, count :
             if abs(h) > 0.5*np.pi:
                 continue
 
-            output_ds.write(f"replicantface/sample_{counter:05}.jpg", str(image_file), labels)
+            output_ds.write(str(parent_in_zip / label_file.stem), str(image_file), labels)
 
             counter += 1
         
@@ -351,6 +352,7 @@ if __name__ == '__main__':
     parser.add_argument('destination', help="Destination file", type=str)
     parser.add_argument('source', help="source directories", type=str, nargs='*')
     parser.add_argument('-n', dest='count', type=int, default=None)
+    parser.add_argument('--parent', type=str, default='replicantface')
     args = parser.parse_args()
     
-    convert_replicantface_folder(args.source, args.destination, args.count)
+    convert_replicantface_folder(args.source, args.destination, args.count, parent_in_zip=Path(args.parent))
