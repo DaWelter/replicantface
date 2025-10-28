@@ -300,7 +300,14 @@ def as_hpb(rot):
     return rot.as_euler('YXZ')
 
 
-def convert_replicantface_folder(sources : list[str], destination : str, count : int | None, parent_in_zip : Path):
+def _check_unique_names(files : list[Path]):
+    names = [ p.stem for p in files ]
+    if names != list(set(names)):
+        msg = "Input files must have unique filenames"
+        raise ValueError(msg)
+
+
+def convert_replicantface_folder(sources : list[str], destination : str, count : int | None, parent_in_zip : Path, max_written : int | None, keep_filenames : bool):
     """Converst and zips the files that the blender script creates.
     
     The output format is mostly compatible with the 300wlp and aflw2000-3d datasets.
@@ -316,6 +323,9 @@ def convert_replicantface_folder(sources : list[str], destination : str, count :
 
     if count:
         label_files = label_files[: count]
+
+    if keep_filenames:
+        _check_unique_names(label_files)
 
     with closing(DatasetWriter300WLPLike(destination)) as output_ds:
         counter = 0
@@ -339,9 +349,14 @@ def convert_replicantface_folder(sources : list[str], destination : str, count :
             if abs(h) > 0.5*np.pi:
                 continue
 
-            output_ds.write(str(parent_in_zip / label_file.stem), str(image_file), labels)
+            output_filename = label_file.stem if keep_filenames else f"sample_{counter:05d}"
+            
+            output_ds.write(str(parent_in_zip / output_filename), str(image_file), labels)
 
             counter += 1
+
+            if max_written and counter >= max_written:
+                break
         
         print("Wrote", counter, "samples")
 
@@ -353,6 +368,8 @@ if __name__ == '__main__':
     parser.add_argument('source', help="source directories", type=str, nargs='*')
     parser.add_argument('-n', dest='count', type=int, default=None)
     parser.add_argument('--parent', type=str, default='replicantface')
+    parser.add_argument('--max-written', type=int, default=None)
+    parser.add_argument('--keep-filenames', action='store_true', default=False)
     args = parser.parse_args()
     
-    convert_replicantface_folder(args.source, args.destination, args.count, parent_in_zip=Path(args.parent))
+    convert_replicantface_folder(args.source, args.destination, args.count, parent_in_zip=Path(args.parent), max_written=args.max_written, keep_filenames=args.keep_filenames)
