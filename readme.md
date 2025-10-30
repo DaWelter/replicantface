@@ -22,8 +22,8 @@ annotations and missing z-coordinate for landmarks. Another dataset called "SynH
 
 ## The dataset
 
-There is a prepared dataset with approx. 96000 faces, full pose annotations and 68 3d landmarks in AFLW2k-3D / 300W-LP format.
-[Download from Google Drive](https://drive.google.com/file/d/17WphiAB5JPYxOOSu4k2iwKqrDWPlqTh-/view?usp=drive_link)
+There is a prepared dataset with 100000 faces, full pose annotations and 68 3d landmarks in AFLW2k-3D / 300W-LP format.
+[Download from Google Drive](https://drive.google.com/file/d/1lF2hWGPKuXahIvg-0CtZG154d82_w19k/view?usp=drive_link)
 
 Full size image with visu
 ![](doc/replicantface.jpg)
@@ -49,9 +49,11 @@ has multipliers to make the brightness more uniform.
 The paid accessories are not in this repo for obvious reasons. The scripts
 will work without them. For more variety get assets to your preference, put them next to the existing assets in the scene
 hierarchy in (`human_scene-v3.blend`), ensure they fit the human model, and adjust material assignments. You can use the
-remaining models as guideline. The module `replicantface/randomize_accessoires.py` must then be changed. Its main
+current models as guideline. The script `replicantface/add_accessories.py`, to be used from blenders script editor, can
+merge external scenes with accessories into the main scene `human_scene-v3.blend`. The module 
+`replicantface/randomize_accessoires.py` must then be changed. Its main
 responsibility is random sampling of accessories, prevention of unreasonable combinations. The issue hereby is that
-it contains hardcoded names and logic for the missing paid models.
+it contains hardcoded names and logic for the missing paid models that the author happened to use.
 
 The last step involving the assets is copying the files from `assets/humgen-assets` to HumGen3D's true asset folder.
 
