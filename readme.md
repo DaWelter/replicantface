@@ -22,8 +22,13 @@ annotations and missing z-coordinate for landmarks. Another dataset called "SynH
 
 ## The dataset
 
-There is a prepared dataset with 100000 faces, full pose annotations and 68 3d landmarks in AFLW2k-3D / 300W-LP format.
+There is a prepared dataset with 100k faces, full pose annotations and 68 3d landmarks in AFLW2k-3D / 300W-LP format.
 [Download from Google Drive](https://drive.google.com/file/d/1lF2hWGPKuXahIvg-0CtZG154d82_w19k/view?usp=drive_link)
+
+A 10k variant is available as well. It has different samples, so it is suitable as test set.
+[Download 10k variant](https://drive.google.com/file/d/1CLdL542XRHFVmNmOAQGyX7mO4HnJsle0/view?usp=drive_link)
+
+More info can be found under [dataset.md](doc/dataset.md) and [rawdata.md](doc/rawdata/rawdata.md)
 
 Full size image with visu
 ![](doc/replicantface.jpg)
@@ -31,7 +36,18 @@ Full size image with visu
 Closeups
 ![](doc/panel.jpg)
 
-More info can be found under [dataset.md](doc/dataset.md) and [rawdata.md](doc/rawdata/rawdata.md)
+## Less randomized datasets
+
+Currently, there is small dataset with `32` faces in random poses, where these faces are held fixed and for each of them
+there is one neutral and `32` variations in facial expression and background.
+
+[Download the 1k pose-stability-test](https://drive.google.com/file/d/1MO7n0cqEHfDkCArw9FrG1NrLy6G2fRz1/view?usp=drive_link)
+
+This can be used to analyze variance due to facial expressions and illumination separately from other factors. E.g. we
+want pose-predictions to remain stable when the user is talking and not moving. Same while subjected to varying illumination
+by a computer screen for instance. The `make_faces.py` script supports this and the normal variant.
+
+![](doc/replicantface-variations.jpg)
 
 ## Usage
 
@@ -52,7 +68,7 @@ hierarchy in (`human_scene-v3.blend`), ensure they fit the human model, and adju
 current models as guideline. The script `replicantface/add_accessories.py`, to be used from blenders script editor, can
 merge external scenes with accessories into the main scene `human_scene-v3.blend`. The module 
 `replicantface/randomize_accessoires.py` must then be changed. Its main
-responsibility is random sampling of accessories, prevention of unreasonable combinations. The issue hereby is that
+responsibility is random sampling of accessories and prevention of unreasonable combinations. The issue hereby is that
 it contains hardcoded names and logic for the missing paid models that the author happened to use.
 
 The last step involving the assets is copying the files from `assets/humgen-assets` to HumGen3D's true asset folder.
@@ -61,11 +77,8 @@ Afterwards things should be ready to go. `make_faces.py` is the main entry point
 editor and ran interactively. The same can be done with the modules in `replicantface` which is useful for development.
 After generating a random human, it renders, composits and dumps the image, segmentation mask and labels to disk.
 
-For generating datasets, take a look at `run_blender.py`. It runs Blender in headless mode and executes `make_faces.py`
-in a loop for a given number of times.
+For generating datasets, take a look at `run_blender.py`. It runs Blender in headless mode and executes `make_faces.py`.
 The raw labels contain dense face vertices, the model-view transformation matrix (thus the head pose), and projection matrix.
 They can be converted by `auxiliary_scripts/convert_to_300wlp_type_dataset.py` to the AFLW2k-3D / 300W-LP format.
 
-You might want to change the pose distribution as the current settings doesn't deliver optimal benchmark results as
-explained in [dataset.md](doc/dataset.md). The relevant code is found in `replicantface/randomize_pose.py`:
-`randomize_camera` and `randomize_pose`.
+The pose distribution has been fixed now to be very similar to FaceSyn which should yield good benchmark results when a new dataset is generated. The relevant code is found in `replicantface/randomize_pose.py`: `randomize_camera` and `randomize_pose`. (Initially, the distribution was suboptimal, and the dataset had to be fixed in hindsight as described in [dataset.md](doc/dataset.md))
